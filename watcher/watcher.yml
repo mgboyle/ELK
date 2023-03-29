@@ -1,0 +1,22 @@
+watcher:
+  trigger:
+    schedule:
+      interval: "10s"
+  input:
+    search:
+      request:
+        indices: ["filebeat-*"]
+        body:
+          query:
+            match:
+              message: "error"
+  condition:
+    script:
+      source: "ctx.payload.hits.total > 0"
+  actions:
+    email_alert:
+      email:
+        profile: gmail_account
+        to: "<your_email_address>"
+        subject: "Watcher alert"
+        body: "{{ctx}}"
