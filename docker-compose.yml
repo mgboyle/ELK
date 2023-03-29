@@ -66,7 +66,11 @@ services:
     environment:
       - discovery.type=single-node
       - cluster.name=docker-cluster
-      - xpack.notification.email.account.gmail.smtp.auth.password=<password>
+      - xpack.notification.email.account.mailtrap.smtp.host=smtp.mailtrap.io
+      - xpack.notification.email.account.mailtrap.smtp.port=2525
+      - xpack.notification.email.account.mailtrap.smtp.secure_connection=ssl
+      - xpack.notification.email.account.mailtrap.smtp.auth.username=36830caecb2d73
+      - xpack.notification.email.account.mailtrap.smtp.auth.password=a58a0b08c02515
     volumes:
       - ./watcher/:/usr/share/elasticsearch/config/watcher/:ro
     networks:
