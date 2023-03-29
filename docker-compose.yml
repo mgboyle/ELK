@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.16.3
+    container_name: filebeat
+    user: root
+    volumes:
+      - /mnt/logs:/mnt/logs:ro
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+    networks:
+      - elastic
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: sh -c 'chmod go-w /usr/share/filebeat/filebeat.yml && filebeat -e'
+    depends_on:
+      - logstash
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.16.3
+    container_name: logstash
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - 5000:5000
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      LS_PIPELINE_BATCH_SIZE: 50
+      LS_PIPELINE_WORKERS: 1
+    networks:
+      - elastic
+    depends_on:
+      - elasticsearch
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.3
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.16.3
+    container_name: kibana
+    ports:
+      - 5601:5601
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    networks:
+      - elastic
+
+volumes:
+  elasticsearch-data:
+
+networks:
+  elastic:
